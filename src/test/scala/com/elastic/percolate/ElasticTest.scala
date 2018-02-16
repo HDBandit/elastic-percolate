@@ -1,15 +1,12 @@
 package com.elastic.percolate
 
-import java.net.InetAddress
-import java.util.{Date, UUID}
+import java.util.UUID
 
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.TransportAddress
-import org.elasticsearch.transport.client.PreBuiltTransportClient
+import org.apache.http.HttpHost
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
+import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.client.{RestClient, RestHighLevelClient}
 import org.elasticsearch.common.xcontent.XContentFactory._
-import org.elasticsearch.action.search.SearchResponse
-import org.elasticsearch.action.search.SearchType
-import org.elasticsearch.index.query.QueryBuilders._
 
 
 object TestElasticSearchPercolate {
@@ -18,31 +15,41 @@ object TestElasticSearchPercolate {
 
 
     // configure the client
-    val client = new PreBuiltTransportClient(Settings.EMPTY)
-      .addTransportAddress(new TransportAddress(InetAddress.getLocalHost, 9200))
+    val restClient = new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")))
 
 
-    println(s"Client connected: ${client.connectedNodes()}")
+    // create an index
+   // val requestCreateIndex = new CreateIndexRequest("letxchange")
+   // restClient.indices().create(requestCreateIndex)
 
-    // create an index (index a document)
-    val tinyHouseUUID = UUID.randomUUID()
+    // indexing a document
+    val productId = UUID.randomUUID()
 
-    val response = client.prepareIndex("casas", "tiny_house", tinyHouseUUID.toString)
+    jsonBuilder.startObject("tradable_product")
+    jsonBuilder.array("key_words", "apple", "iphone 6")
+    jsonBuilder.array("trade_keywords", "Samsung", "S5")
+    jsonBuilder.endObject
+
+    val indexRequest = new IndexRequest("letxchange", "producto", productId.toString).source(jsonBuilder)
+    restClient.index(indexRequest)
+
+
+    /*
+    val productUUID = UUID.randomUUID()
+
+    val response = client.prepareIndex("productos", "producto")
       .setSource(jsonBuilder()
         .startObject()
+        .field("uuid", productUUID.toString)
         .field("owner", "Gerard Vico")
         .field("location", "Spain")
-        .field("description", "It is very cool and small")
+        .array("keywords", "iphone", "apple", "plus")
+        .array("trade_keywords", "samsung", "S5")
         .endObject()
       )
       .get()
+      */
 
-
-    // Obtain a document by id
-    /* val responseGet = client.prepareGet("twitter", "tweet", tinyHouseUUID.toString).get
-
-    println(s"Get response -> owner: ${responseGet.getField("owner")}; location: ${responseGet.getField("location")}")
-    */
 
     // Search by criteria
     /* val searchResponse = client.prepareSearch("casas")
