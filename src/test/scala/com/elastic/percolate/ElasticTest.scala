@@ -8,6 +8,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.client.{RestClient, RestHighLevelClient}
 import org.elasticsearch.common.xcontent.XContentFactory
+import org.elasticsearch.action.update.UpdateRequest
 
 import scala.util.Try
 
@@ -32,20 +33,32 @@ object TestElasticSearchPercolate {
     // Index a document
     val productId = UUID.randomUUID().toString
 
-    val builder = XContentFactory.jsonBuilder
-    builder.startObject
-    builder.field("product-id", productId)
-    builder.array("key-words", "iphone", "apple")
-    builder.array("tradable-keywords", "samsung", "X5")
-    builder.endObject
+    val createBuilder = XContentFactory.jsonBuilder
+    createBuilder.startObject
+    createBuilder.field("product-id", productId)
+    createBuilder.array("key-words", "iphone", "apple")
+    createBuilder.array("tradable-keywords", "samsung", "X5")
+    createBuilder.endObject
 
-    val indexRequest = new IndexRequest("letxchange", "products", productId).source(builder)
+    val indexRequest = new IndexRequest("letxchange", "products", productId).source(createBuilder)
     if (restClient.index(indexRequest).getResult == DocWriteResponse.Result.CREATED) {
-      println(s"Document indexed: ${builder.toString}")
+      println(s"Document indexed: ${createBuilder.prettyPrint().toString} with documentID: $productId")
     } else {
-      println(s"Error indexing document: ${builder.toString}")
+      println(s"Error indexing document: ${createBuilder.prettyPrint().toString}, documentID: $productId")
     }
 
+    // Update an existing indexed document
+    val updateBuilder = XContentFactory.jsonBuilder
+    updateBuilder.startObject
+    updateBuilder.array("tradable-keywords", "samsung", "X5", "bicicleta", "BMX")
+    updateBuilder.endObject
+
+    val updateRequest = new UpdateRequest("letxchange", "products", productId).doc(updateBuilder)
+    if (restClient.update(updateRequest).getResult == DocWriteResponse.Result.UPDATED) {
+      println(s"Document indexed updated: ${createBuilder.prettyPrint().toString} with documentID: $productId")
+    } else {
+      println(s"Error updating indexed document: ${updateBuilder.prettyPrint().toString}, documentID: $productId")
+    }
 
     // close client
     restClient.close()
