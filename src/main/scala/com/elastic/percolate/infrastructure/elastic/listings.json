@@ -1,0 +1,23 @@
+{
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "tradable_keywords": {
+          "type": "string"
+        },
+        "query": {
+          "type": "percolator"
+        }
+      }
+    }
+  }
+}
